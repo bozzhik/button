@@ -1,9 +1,9 @@
-import {Button} from '@/components/UI/Button'
+import {StateModule} from '@/components/StateModule'
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen grid place-items-center">
-      <Button>Нажать</Button>
+    <main className="grid min-h-screen place-items-center">
+      <StateModule />
     </main>
   )
 }
