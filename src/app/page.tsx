@@ -1,8 +1,9 @@
+import {Button} from '@/components/UI/Button'
+
 export default function HomePage() {
   return (
-    <main>
-      <h1>Кнопка с состоянием</h1>
-      <button>Нажать</button>
+    <main className="min-h-screen grid place-items-center">
+      <Button>Нажать</Button>
     </main>
   )
 }
