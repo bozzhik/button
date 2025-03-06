@@ -15,20 +15,38 @@ export function StateModule() {
   const [isBusy, setIsBusy] = useState<boolean | null>(null)
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
 
+  const [isWatcherActive, setIsWatcherActive] = useState(false)
+  const [countdown, setCountdown] = useState(5)
+
+  const fetchState = async () => {
+    try {
+      const {data} = await axios.get<ButtonState>('/api/state')
+      setIsBusy(data.isBusy)
+      setLastUpdated(data.lastUpdated)
+    } catch (error) {
+      console.error('Ошибка при получении состояния:', error)
+    }
+  }
+
   useEffect(() => {
-    const fetchState = async () => {
-      try {
-        const {data} = await axios.get<ButtonState>('/api/state')
-        setIsBusy(data.isBusy)
-        setLastUpdated(data.lastUpdated)
-      } catch (error) {
-        console.error('Ошибка при получении состояния:', error)
-        alert('Ошибка при получении состояния')
-      }
+    fetchState()
+
+    let intervalId: NodeJS.Timeout | null = null
+    let countdownId: NodeJS.Timeout | null = null
+
+    if (isWatcherActive) {
+      intervalId = setInterval(fetchState, 5000)
+
+      countdownId = setInterval(() => {
+        setCountdown((prev) => (prev > 0 ? prev - 1 : 5))
+      }, 1000)
     }
 
-    fetchState()
-  }, [])
+    return () => {
+      if (intervalId) clearInterval(intervalId)
+      if (countdownId) clearInterval(countdownId)
+    }
+  }, [isWatcherActive])
 
   const handleToggle = async () => {
     setIsLoading(true)
@@ -42,6 +60,11 @@ export function StateModule() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const toggleWatcher = () => {
+    setIsWatcherActive(!isWatcherActive)
+    setCountdown(5)
   }
 
   const formatDate = (dateString: string) => {
@@ -86,7 +109,13 @@ export function StateModule() {
         )}
       </Button>
 
-      {lastUpdated && <div className="absolute text-xs bottom-4">Изменено: {formatDate(lastUpdated)}</div>}
+      <div className={cn('absolute bottom-4 text-xs', 'flex flex-col items-center gap-1.5')}>
+        <div className={cn('text-white cursor-pointer', !isWatcherActive && 'animate-pulse')} onClick={toggleWatcher}>
+          <span>Синхронизация {isWatcherActive ? `включена: ${countdown} сек` : 'отключена'}</span>
+        </div>
+
+        {lastUpdated && <div>Изменено: {formatDate(lastUpdated)}</div>}
+      </div>
     </div>
   )
 }
