@@ -1,26 +1,44 @@
 'use client'
 
-import {useState} from 'react'
+import type {ButtonState} from '@/lib/redis'
+
+import {useState, useEffect} from 'react'
+import axios from 'axios'
 import {cn} from '@/lib/utils'
 
 import {Button} from '@/components/UI/Button'
 import {Loader2} from 'lucide-react'
 
 export function StateModule() {
-  const [isBusy, setIsBusy] = useState<boolean | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
+  const [isBusy, setIsBusy] = useState<boolean | null>(null)
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchState = async () => {
+      try {
+        const {data} = await axios.get<ButtonState>('/api/state')
+        setIsBusy(data.isBusy)
+        setLastUpdated(data.lastUpdated)
+      } catch (error) {
+        console.error('Ошибка при получении состояния:', error)
+        alert('Ошибка при получении состояния')
+      }
+    }
+
+    fetchState()
+  }, [])
 
   const handleToggle = async () => {
     setIsLoading(true)
     try {
-      const data = null
+      const {data} = await axios.post<ButtonState>('/api/state')
       setIsBusy(data.isBusy)
       setLastUpdated(data.lastUpdated)
     } catch (error) {
-      alert('Ошибка при изменении состояния')
       console.error('Ошибка при изменении состояния:', error)
+      alert('Ошибка при изменении состояния')
     } finally {
       setIsLoading(false)
     }
